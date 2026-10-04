@@ -1,22 +1,23 @@
+import joblib
+import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-def evaluate_model(model_name, y_test, predictions):
-    accuracy = accuracy_score(y_test, predictions)
-    print("=" * 50)
-    print(model_name)
-    print("=" * 50)
-    print("\nAccuracy:")
-    print(round(accuracy * 100, 2), "%")
-    print("\nClassification Report:")
-    print(classification_report(y_test, predictions))
-    cm = confusion_matrix(y_test, predictions)
-    print("Confusion Matrix:")
-    print(cm)
-    plt.figure(figsize=(5, 4))
-    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", cbar=False)
-    plt.title(model_name + " - Confusion Matrix")
-    plt.xlabel("Predicted")
-    plt.ylabel("Actual")
-    plt.show()
-    return accuracy
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, ConfusionMatrixDisplay
+from preprocessing import preprocess_data
+df = pd.read_csv("Dataset/Heart.csv")
+df = preprocess_data(df)
+X = df.drop("HeartDisease", axis=1)
+y = df["HeartDisease"]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+model = joblib.load("model/heart_logistic_model.pkl")
+y_pred = model.predict(X_test)
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred, target_names=["No Heart Disease", "Heart Disease"]))
+cm = confusion_matrix(y_test, y_pred)
+print("\nConfusion Matrix:")
+print(cm)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["No Heart Disease", "Heart Disease"])
+disp.plot()
+plt.title("Heart Disease - Logistic Regression")
+plt.show()
